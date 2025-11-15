@@ -64,57 +64,57 @@ The Circular Protocol Go SDK provides **39 methods** across multiple categories 
 
 ### Wallet Operations (5 methods)
 
-- **`checkWallet`** - Verify wallet existence on the blockchain
-- **`getWallet`** - Retrieve complete wallet details and metadata
-- **`getLatestTransactions`** - Get recent wallet activity and transaction history
-- **`getWalletBalance`** - Query current wallet balance across assets
-- **`getWalletNonce`** - Get transaction nonce for the wallet
+- **`CheckWallet`** - Verify wallet existence on the blockchain
+- **`GetWallet`** - Retrieve complete wallet details and metadata
+- **`GetLatestTransactions`** - Get recent wallet activity and transaction history
+- **`GetWalletBalance`** - Query current wallet balance across assets
+- **`GetWalletNonce`** - Get transaction nonce for the wallet
 
 ### Transaction Operations (6 methods)
 
-- **`sendTransaction`** - Submit new transaction to the blockchain
-- **`getPendingTransaction`** - Check transaction status in the mempool
-- **`getTransactionbyID`** - Query transaction by unique identifier
-- **`getTransactionbyNode`** - Query transactions by validator node
-- **`getTransactionbyAddress`** - Query all transactions for a wallet address
-- **`getTransactionbyDate`** - Query transactions within a date range
+- **`SendTransaction`** - Submit new transaction to the blockchain
+- **`GetPendingTransaction`** - Check transaction status in the mempool
+- **`GetTransactionByID`** - Query transaction by unique identifier
+- **`GetTransactionByNode`** - Query transactions by validator node
+- **`GetTransactionByAddress`** - Query all transactions for a wallet address
+- **`GetTransactionByDate`** - Query transactions within a date range
 
 ### Block Operations (4 methods)
 
-- **`getBlock`** - Retrieve block data by block number or hash
-- **`getBlockRange`** - Query multiple blocks within a range
-- **`getBlockCount`** - Get current blockchain height (latest block number)
-- **`getAnalytics`** - Retrieve blockchain performance metrics and analytics
+- **`GetBlock`** - Retrieve block data by block number or hash
+- **`GetBlockRange`** - Query multiple blocks within a range
+- **`GetBlockCount`** - Get current blockchain height (latest block number)
+- **`GetAnalytics`** - Retrieve blockchain performance metrics and analytics
 
 ### Contract Operations (2 methods)
 
-- **`testContract`** - Validate smart contract logic before deployment
-- **`callContract`** - Execute smart contract function call
+- **`TestContract`** - Validate smart contract logic before deployment
+- **`CallContract`** - Execute smart contract function call
 
 ### Asset Operations (4 methods)
 
-- **`getAssetList`** - List all available assets on the blockchain
-- **`getAsset`** - Get detailed asset information and metadata
-- **`getAssetSupply`** - Query total and circulating supply for an asset
-- **`getVoucher`** - Retrieve voucher data and redemption details
+- **`GetAssetList`** - List all available assets on the blockchain
+- **`GetAsset`** - Get detailed asset information and metadata
+- **`GetAssetSupply`** - Query total and circulating supply for an asset
+- **`GetVoucher`** - Retrieve voucher data and redemption details
 
 ### Domain Operations (1 method)
 
-- **`getDomain`** - Query blockchain domain registry (resolve domain to address)
+- **`GetDomain`** - Query blockchain domain registry (resolve domain to address)
 
 ### Network Operations (1 method)
 
-- **`getBlockchains`** - List all supported blockchain networks
+- **`GetBlockchains`** - List all supported blockchain networks
 
 ---
 
 ### Cryptographic Helpers (5 methods)
 
-- **`signMessage`** - Generate ECDSA secp256k1 signatures (DER format)
-- **`verifySignature`** - Verify message signatures against public keys
-- **`getPublicKey`** - Derive public key from private key (128 hex characters, uncompressed, no 0x04 prefix)
-- **`hashString`** - Generate SHA-256 hash of string input
-- **`getFormattedTimestamp`** - Get current UTC timestamp in Circular Protocol format (`YYYY:MM:DD-HH:mm:ss`)
+- **`SignMessage`** - Generate ECDSA secp256k1 signatures (DER format)
+- **`VerifySignature`** - Verify message signatures against public keys
+- **`GetPublicKey`** - Derive public key from private key (128 hex characters, uncompressed, no 0x04 prefix)
+- **`HashString`** - Generate SHA-256 hash of string input
+- **`GetFormattedTimestamp`** - Get current UTC timestamp in Circular Protocol format (`YYYY:MM:DD-HH:mm:ss`)
 
 **Implementation Details:**
 - **TypeScript/JavaScript**: `crypto-browserify` (browser-compatible)
@@ -128,18 +128,18 @@ The Circular Protocol Go SDK provides **39 methods** across multiple categories 
 
 ### Encoding Helpers (4 methods)
 
-- **`hexFix`** - Normalize hex strings (remove `0x` prefix if present)
-- **`stringToHex`** - Convert UTF-8 string to hexadecimal encoding
-- **`hexToString`** - Convert hexadecimal string to UTF-8
-- **`padNumber`** - Zero-pad single-digit numbers (e.g., `5` → `"05"`)
+- **`HexFix`** - Normalize hex strings (remove `0x` prefix if present)
+- **`StringToHex`** - Convert UTF-8 string to hexadecimal encoding
+- **`HexToString`** - Convert hexadecimal string to UTF-8
+- **`PadNumber`** - Zero-pad single-digit numbers (e.g., `5` → `"05"`)
 
 ---
 
 ### Advanced Helpers (3 methods)
 
 - **`GetError`** - Retrieve last error message from SDK
-- **`handleError`** - Internal error tracking and logging
-- **`getTransactionOutcome`** - Poll for transaction confirmation with automatic retries
+- **`HandleError`** - Internal error tracking and logging
+- **`GetTransactionOutcome`** - Poll for transaction confirmation with automatic retries
 
 **Transaction Polling Behavior:**
 - Checks transaction status every **5 seconds** (configurable via `intervalSec`)
@@ -152,14 +152,14 @@ The Circular Protocol Go SDK provides **39 methods** across multiple categories 
 
 ### Convenience Methods (1 method)
 
-- **`registerWallet`** - Simplified wallet registration (wraps `sendTransaction`)
+- **`RegisterWallet`** - Simplified wallet registration (wraps `SendTransaction`)
 
 **Implementation:**
-- Automatically derives `From` and `To` addresses via `hashString(publicKey)`
+- Automatically derives `From` and `To` addresses via `HashString(publicKey)`
 - Constructs transaction payload: `{"Action": "CP_WALLET", "PublicKey": "..."}`
 - Sets default values: `Nonce="00000000"`, `Type="C"`, `Signature="0000..."`
 - Calculates transaction ID as SHA-256 hash of transaction fields
-- Returns same response structure as `sendTransaction`
+- Returns same response structure as `SendTransaction`
 
 ---
 

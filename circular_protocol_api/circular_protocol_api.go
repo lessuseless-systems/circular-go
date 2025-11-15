@@ -137,7 +137,7 @@ func GetWalletNonce(blockchain string, address string) map[string]interface{} {
 * @param address string - address to check
 * @return map[string]interface{} - response
  */
-func GetLatestTransaction(blockchain string, address string) map[string]interface{} {
+func GetLatestTransactions(blockchain string, address string) map[string]interface{} {
 	data := map[string]interface{}{
 		"Blockchain": utils.HexFix(blockchain),
 		"Address":    utils.HexFix(address),
@@ -173,7 +173,7 @@ func RegisterWallet(blockchain string, publicKey string) map[string]interface{} 
 	blockchain = utils.HexFix(blockchain)
 	publicKey = utils.HexFix(publicKey)
 
-	var sender = utils.Sha256(publicKey)
+	var sender = utils.HashString(publicKey)
 	var to = sender
 	var nonce = "0"
 	var Type = "C_TYPE_REGISTERWALLET"
@@ -195,7 +195,7 @@ func RegisterWallet(blockchain string, publicKey string) map[string]interface{} 
 
 	dataToHash := blockchain + sender + to + payload + nonce + timestamp
 
-	id := utils.Sha256(dataToHash)
+	id := utils.HashString(dataToHash)
 	signature := ""
 
 	return SendTransaction(id, sender, to, timestamp, Type, payload, nonce, signature, blockchain)

@@ -196,10 +196,15 @@ func HexFix(word interface{}) string {
 	}
 }
 
-// Sha256 calculates the SHA-256 hash of a string
-func Sha256(data string) string {
+// HashString calculates the SHA-256 hash of a string
+func HashString(data string) string {
 	hash := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(hash[:])
+}
+
+// Sha256 is an alias for HashString for backward compatibility
+func Sha256(data string) string {
+	return HashString(data)
 }
 
 func bytesToHex(b []byte) string {
@@ -272,7 +277,7 @@ func GetPublicKey(privateKey string) string {
 
 func GetKeysFromString(seedPhrase string) (map[string]string, error) {
 	// Generate private key using RFC 6979
-	hashHex := Sha256(seedPhrase)
+	hashHex := HashString(seedPhrase)
 	hash, err := hex.DecodeString(hashHex)
 	if err != nil {
 		return nil, err
@@ -288,7 +293,7 @@ func GetKeysFromString(seedPhrase string) (map[string]string, error) {
 	publicKeyDER := publicKey.SerializeUncompressed()
 
 	// Generate address from public key
-	addressDER := Sha256(bytesToHex(publicKey.SerializeUncompressed()))
+	addressDER := HashString(bytesToHex(publicKey.SerializeUncompressed()))
 
 	// Create a map to hold the results
 	result := map[string]string{

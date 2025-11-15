@@ -18,11 +18,18 @@ package circularprotocol
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/btcsuite/btcd/btcec/v2"
 )
 
 // Client represents a Circular Protocol API client
@@ -242,10 +249,10 @@ The nonce is used for transaction ordering and must increment with each transact
 func (c *Client) GetWalletNonce(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetWalletNonce", req)
 }
-// AddTransaction Submit transaction to blockchain
+// SendTransaction Submit transaction to blockchain
 // Submits a transaction to the blockchain. Requires a complete signed transaction
-including ID, addresses, payload, nonce, and signature.
-func (c *Client) AddTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// including ID, addresses, payload, nonce, and signature.
+func (c *Client) SendTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "AddTransaction", req)
 }
 // GetPendingTransaction Get pending transaction by ID
@@ -254,28 +261,28 @@ Returns the transaction if it exists and is still pending.
 func (c *Client) GetPendingTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetPendingTransaction", req)
 }
-// GetTransactionbyID Find transaction by ID
+// GetTransactionByID Find transaction by ID
 // Finds a transaction by ID within a specified block range.
-Searches through blocks to locate the transaction.
-func (c *Client) GetTransactionbyID(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// Searches through blocks to locate the transaction.
+func (c *Client) GetTransactionByID(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyID", req)
 }
-// GetTransactionbyNode Find transactions by node ID
+// GetTransactionByNode Find transactions by node ID
 // Finds transactions by node ID within a specified block range.
-Returns all transactions associated with the node.
-func (c *Client) GetTransactionbyNode(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// Returns all transactions associated with the node.
+func (c *Client) GetTransactionByNode(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyNode", req)
 }
-// GetTransactionbyAddress Find transactions by address
+// GetTransactionByAddress Find transactions by address
 // Finds transactions by wallet address within a specified block range.
-Returns transactions where the address is sender or recipient.
-func (c *Client) GetTransactionbyAddress(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// Returns transactions where the address is sender or recipient.
+func (c *Client) GetTransactionByAddress(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyAddress", req)
 }
-// GetTransactionbyDate Find transactions by date range
+// GetTransactionByDate Find transactions by date range
 // Finds transactions by wallet address within a specified date range.
-Returns all transactions for the address between the dates.
-func (c *Client) GetTransactionbyDate(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// Returns all transactions for the address between the dates.
+func (c *Client) GetTransactionByDate(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyDate", req)
 }
 // GetBlock Get specific block
@@ -375,7 +382,7 @@ The same wallet can be registered on multiple blockchains.
 // It handles transaction construction internally.
 func (c *Client) RegisterWallet(ctx context.Context, blockchain string, publicKey string) (map[string]interface{}, error) {
 	// Derive addresses from public key
-	from := hashString(publicKey)
+	from := c.HashString(publicKey)
 	to := from
 	nonce := "0"
 	txType := "C_TYPE_REGISTERWALLET"
@@ -390,11 +397,11 @@ func (c *Client) RegisterWallet(ctx context.Context, blockchain string, publicKe
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
 	}
-	payload := stringToHex(string(payloadJSON))
-	timestamp := GetFormattedTimestamp()
+	payload := c.StringToHex(string(payloadJSON))
+	timestamp := c.GetFormattedTimestamp()
 
 	// Calculate transaction ID
-	id := hashString(blockchain + from + to + payload + nonce + timestamp)
+	id := c.HashString(blockchain + from + to + payload + nonce + timestamp)
 	signature := ""
 
 	// Build request
@@ -642,7 +649,7 @@ func (c *Client) GetTransactionOutcome(
 			"Version":    "2.0.0-alpha.1",
 		}
 
-		tx, err := c.GetTransactionbyID(ctx, request)
+		tx, err := c.GetTransactionByID(ctx, request)
 		if err != nil {
 			// If error is not just "pending", return error
 			if !strings.Contains(strings.ToLower(err.Error()), "pending") {

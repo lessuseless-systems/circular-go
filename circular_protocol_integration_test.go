@@ -178,7 +178,7 @@ request["To"] = "0xccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 request["Type"] = "transfer"
 request["Version"] = "1.0.8"
 
-	result, err := client.AddTransaction(ctx, request)
+	result, err := client.SendTransaction(ctx, request)
 	if err != nil {
 		t.Fatalf("API call failed: %%v", err)
 	}
@@ -225,7 +225,7 @@ request["Address"] = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 request["Blockchain"] = ""MainNet""
 request["Version"] = "1.0.8"
 
-	result, err := client.GetTransactionbyAddress(ctx, request)
+	result, err := client.GetTransactionByAddress(ctx, request)
 	if err != nil {
 		t.Fatalf("API call failed: %%v", err)
 	}
@@ -250,7 +250,7 @@ request["EndDate"] = "2024-12-31"
 request["StartDate"] = "2024-01-01"
 request["Version"] = "1.0.8"
 
-	result, err := client.GetTransactionbyDate(ctx, request)
+	result, err := client.GetTransactionByDate(ctx, request)
 	if err != nil {
 		t.Fatalf("API call failed: %%v", err)
 	}
@@ -274,7 +274,7 @@ request["Blockchain"] = ""MainNet""
 request["TransactionID"] = "0xaabbccdd11223344"
 request["Version"] = "1.0.8"
 
-	result, err := client.GetTransactionbyID(ctx, request)
+	result, err := client.GetTransactionByID(ctx, request)
 	if err != nil {
 		t.Fatalf("API call failed: %%v", err)
 	}
@@ -298,7 +298,7 @@ request["Blockchain"] = ""MainNet""
 request["Node"] = "0xnode123"
 request["Version"] = "1.0.8"
 
-	result, err := client.GetTransactionbyNode(ctx, request)
+	result, err := client.GetTransactionByNode(ctx, request)
 	if err != nil {
 		t.Fatalf("API call failed: %%v", err)
 	}
@@ -625,7 +625,7 @@ func Test_connection_error(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	invalidClient := NewClient("http://localhost:9999", "")
+	invalidClient := circularprotocol.NewClient("http://localhost:9999", "")
 
 	request := make(map[string]interface{})
 request["Address"] = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
