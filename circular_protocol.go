@@ -1,18 +1,24 @@
 // Package circularprotocol provides a Go SDK for the Circular Protocol blockchain API.
 // Generated from Nickel API specification
-// Version: 1.0.8
+// Version: 1.0.9
 //
-// Example usage:
+// This SDK provides dual API patterns for maximum flexibility:
+//
+// 1. Convenience methods with positional parameters (auto-preprocessing):
 //
 //	client := circularprotocol.NewClient("https://nag.circularlabs.io/NAG.php?cep=", "")
-//	result, err := client.CheckWallet(context.Background(), map[string]interface{}{
+//	// Auto-strips '0x' prefix, auto-injects version
+//	result, err := client.CheckWallet(ctx, "MainNet", "0x742d35...")
+//
+// 2. Request object style (explicit control):
+//
+//	result, err := client.CheckWalletRaw(ctx, map[string]interface{}{
 //		"Address":    "0x...",
 //		"Blockchain": "714d2ac07a826b66ac56752eebd7c77b58d2ee842e523d913fd0ef06e6bdfcae",
-//		"Version":    "1.0.8",
+//		"Version":    "1.0.9",
 //	})
-//	if err != nil {
-//		log.Fatal(err)
-//	}
+//
+// Both patterns are fully supported and maintained.
 package circularprotocol
 
 import (
@@ -32,12 +38,18 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2"
 )
 
+const (
+	// Version is the current SDK version
+	Version = "1.0.9"
+)
+
 // Client represents a Circular Protocol API client
 type Client struct {
 	nagURL     string
 	nagKey     string
 	httpClient *http.Client
 	headers    map[string]string
+	version    string
 }
 
 // Config holds client configuration options
@@ -96,6 +108,7 @@ func NewClientWithConfig(cfg Config) *Client {
 		nagKey:     cfg.NAGKey,
 		httpClient: httpClient,
 		headers:    headers,
+		version:    Version,
 	}
 }
 
@@ -216,168 +229,427 @@ func (c *Client) makeRequest(ctx context.Context, endpoint string, data map[stri
 }
 
 // ============================================================================
-// API Methods
+// API Methods - Raw (Request Object Style)
 // ============================================================================
-// CheckWallet Check if wallet exists
+// These methods accept a map[string]interface{} request object and provide
+// explicit control over all parameters. No auto-preprocessing is applied.
+
+// CheckWalletRaw checks if wallet exists (request object style)
 // Checks whether a wallet address exists on the specified blockchain.
 // Returns existence status and confirms the address format.
-func (c *Client) CheckWallet(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+//
+// Parameters (via request map):
+//   - Blockchain: Blockchain identifier (no auto-preprocessing)
+//   - Address: Wallet address (no auto-preprocessing)
+//   - Version: SDK version (required)
+//
+// Example:
+//
+//	result, err := client.CheckWalletRaw(ctx, map[string]interface{}{
+//		"Blockchain": "MainNet",
+//		"Address":    "742d35...",
+//		"Version":    "1.0.9",
+//	})
+func (c *Client) CheckWalletRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "CheckWallet", req)
 }
 
-// GetWallet Get wallet information
+// CheckWallet checks if wallet exists (convenience method with auto-preprocessing)
+// Checks whether a wallet address exists on the specified blockchain.
+//
+// This method automatically:
+//   - Strips '0x' prefix from blockchain and address parameters
+//   - Injects Version field automatically
+//
+// Parameters:
+//   - ctx: Context for request cancellation/timeout
+//   - blockchain: Blockchain identifier (e.g., '0xMainNet' or 'MainNet')
+//   - address: Wallet address (e.g., '0x742d35...' or '742d35...')
+//
+// Returns:
+//   - map with "Result" (int) and "Response" fields
+//   - error if request fails
+//
+// Example:
+//
+//	// Auto-strips '0x' prefix from both parameters
+//	exists, err := client.CheckWallet(ctx, "0xMainNet", "0x742d35...")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	fmt.Printf("Wallet exists: %v\n", exists["Response"])
+//
+// See also:  GetWallet, GetWalletBalance
+func (c *Client) CheckWallet(ctx context.Context, blockchain string, address string) (map[string]interface{}, error) {
+	req := map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"Version":    c.version,
+	}
+	return c.CheckWalletRaw(ctx, req)
+}
+
+// GetWalletRaw gets wallet information (request object style)
 // Retrieves complete wallet information including balance and nonce.
-// Returns all wallet properties including current state on the blockchain.
-func (c *Client) GetWallet(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+func (c *Client) GetWalletRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetWallet", req)
 }
 
-// GetLatestTransactions Get latest transactions for wallet
-// Retrieves the latest transactions for a wallet address.
-// Returns an array of transaction objects with details.
-func (c *Client) GetLatestTransactions(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetWallet gets complete wallet information (convenience method with auto-preprocessing)
+// Retrieves comprehensive wallet information including balance, nonce, and state.
+//
+// This method automatically:
+//   - Strips '0x' prefix from blockchain and address
+//   - Injects Version field
+//
+// Parameters:
+//   - ctx: Context for request cancellation/timeout
+//   - blockchain: Blockchain identifier
+//   - address: Wallet address
+//
+// Example:
+//
+//	wallet, err := client.GetWallet(ctx, "MainNet", "0x742d35...")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	fmt.Printf("Balance: %v, Nonce: %v\n", wallet["Response"].(map[string]interface{})["Balance"],
+//		wallet["Response"].(map[string]interface{})["Nonce"])
+//
+// See also: CheckWallet, GetWalletBalance, GetWalletNonce
+func (c *Client) GetWallet(ctx context.Context, blockchain string, address string) (map[string]interface{}, error) {
+	req := map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"Version":    c.version,
+	}
+	return c.GetWalletRaw(ctx, req)
+}
+
+// GetLatestTransactionsRaw gets latest transactions (request object style)
+func (c *Client) GetLatestTransactionsRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetLatestTransactions", req)
 }
 
-// GetWalletBalance Get wallet balance for specific asset
-// Retrieves the balance of a specified asset in a wallet.
-// Returns the balance amount for the requested asset.
-func (c *Client) GetWalletBalance(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetLatestTransactions gets latest transactions for wallet (convenience method)
+func (c *Client) GetLatestTransactions(ctx context.Context, blockchain string, address string) (map[string]interface{}, error) {
+	return c.GetLatestTransactionsRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"Version":    c.version,
+	})
+}
+
+// GetWalletBalanceRaw gets wallet balance (request object style)
+func (c *Client) GetWalletBalanceRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetWalletBalance", req)
 }
 
-// GetWalletNonce Get wallet nonce
-// Retrieves the nonce (transaction counter) of a wallet.
-// The nonce is used for transaction ordering and must increment with each transaction.
-func (c *Client) GetWalletNonce(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetWalletBalance gets wallet balance for specific asset (convenience method)
+func (c *Client) GetWalletBalance(ctx context.Context, blockchain string, address string, asset string) (map[string]interface{}, error) {
+	return c.GetWalletBalanceRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"Asset":      asset,
+		"Version":    c.version,
+	})
+}
+
+// GetWalletNonceRaw gets wallet nonce (request object style)
+func (c *Client) GetWalletNonceRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetWalletNonce", req)
 }
 
-// SendTransaction Submit transaction to blockchain
-// Submits a transaction to the blockchain. Requires a complete signed transaction
-// including ID, addresses, payload, nonce, and signature.
-func (c *Client) SendTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetWalletNonce gets wallet nonce (convenience method)
+func (c *Client) GetWalletNonce(ctx context.Context, blockchain string, address string) (map[string]interface{}, error) {
+	return c.GetWalletNonceRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"Version":    c.version,
+	})
+}
+
+// SendTransactionRaw submits transaction (request object style)
+func (c *Client) SendTransactionRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "AddTransaction", req)
 }
 
-// GetPendingTransaction Get pending transaction by ID
-// Searches for a transaction by ID among pending transactions.
-// Returns the transaction if it exists and is still pending.
-func (c *Client) GetPendingTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// SendTransaction submits transaction with positional parameters (convenience method)
+// Matches JavaScript implementation signature, auto-injects version
+func (c *Client) SendTransaction(
+	ctx context.Context,
+	id string,
+	from string,
+	to string,
+	timestamp string,
+	txType string,
+	payload string,
+	nonce string,
+	signature string,
+	blockchain string,
+) (map[string]interface{}, error) {
+	return c.SendTransactionRaw(ctx, map[string]interface{}{
+		"ID":         id,
+		"From":       from,
+		"To":         to,
+		"Timestamp":  timestamp,
+		"Type":       txType,
+		"Payload":    payload,
+		"Nonce":      nonce,
+		"Signature":  signature,
+		"Blockchain": blockchain,
+		"Version":    c.version,
+	})
+}
+
+// GetPendingTransactionRaw gets pending transaction (request object style)
+func (c *Client) GetPendingTransactionRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetPendingTransaction", req)
 }
 
-// GetTransactionByID Find transaction by ID
-// Finds a transaction by ID within a specified block range.
-// Searches through blocks to locate the transaction.
-func (c *Client) GetTransactionByID(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetPendingTransaction gets pending transaction by ID (convenience method)
+func (c *Client) GetPendingTransaction(ctx context.Context, blockchain string, txID string) (map[string]interface{}, error) {
+	return c.GetPendingTransactionRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"ID":         c.HexFix(txID),
+		"Version":    c.version,
+	})
+}
+
+// GetTransactionByIDRaw finds transaction by ID (request object style)
+func (c *Client) GetTransactionByIDRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyID", req)
 }
 
-// GetTransactionByNode Find transactions by node ID
-// Finds transactions by node ID within a specified block range.
-// Returns all transactions associated with the node.
-func (c *Client) GetTransactionByNode(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetTransactionByID finds transaction by ID (convenience method)
+func (c *Client) GetTransactionByID(ctx context.Context, blockchain string, txID string, start string, end string) (map[string]interface{}, error) {
+	return c.GetTransactionByIDRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"ID":         c.HexFix(txID),
+		"Start":      start,
+		"End":        end,
+		"Version":    c.version,
+	})
+}
+
+// GetTransactionByNodeRaw finds transactions by node (request object style)
+func (c *Client) GetTransactionByNodeRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyNode", req)
 }
 
-// GetTransactionByAddress Find transactions by address
-// Finds transactions by wallet address within a specified block range.
-// Returns transactions where the address is sender or recipient.
-func (c *Client) GetTransactionByAddress(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetTransactionByNode finds transactions by node ID (convenience method)
+func (c *Client) GetTransactionByNode(ctx context.Context, blockchain string, nodeID string, start string, end string) (map[string]interface{}, error) {
+	return c.GetTransactionByNodeRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"NodeID":     c.HexFix(nodeID),
+		"Start":      start,
+		"End":        end,
+		"Version":    c.version,
+	})
+}
+
+// GetTransactionByAddressRaw finds transactions by address (request object style)
+func (c *Client) GetTransactionByAddressRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyAddress", req)
 }
 
-// GetTransactionByDate Find transactions by date range
-// Finds transactions by wallet address within a specified date range.
-// Returns all transactions for the address between the dates.
-func (c *Client) GetTransactionByDate(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetTransactionByAddress finds transactions by address (convenience method)
+func (c *Client) GetTransactionByAddress(ctx context.Context, blockchain string, address string, start string, end string) (map[string]interface{}, error) {
+	return c.GetTransactionByAddressRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"Start":      start,
+		"End":        end,
+		"Version":    c.version,
+	})
+}
+
+// GetTransactionByDateRaw finds transactions by date (request object style)
+func (c *Client) GetTransactionByDateRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyDate", req)
 }
 
-// GetBlock Get specific block
-// Retrieves a desired block by block number.
-// Returns complete block information including transactions and hash.
-func (c *Client) GetBlock(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetTransactionByDate finds transactions by date range (convenience method)
+func (c *Client) GetTransactionByDate(ctx context.Context, blockchain string, address string, startDate string, endDate string) (map[string]interface{}, error) {
+	return c.GetTransactionByDateRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"StartDate":  startDate,
+		"EndDate":    endDate,
+		"Version":    c.version,
+	})
+}
+
+// GetBlockRaw gets specific block (request object style)
+func (c *Client) GetBlockRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetBlock", req)
 }
 
-// GetBlockRange Get range of blocks
-// Retrieves all blocks in a specified range.
-// If End = 0, then Start is the number of blocks from the last one minted going backward.
-func (c *Client) GetBlockRange(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetBlock gets specific block by number (convenience method)
+func (c *Client) GetBlock(ctx context.Context, blockchain string, blockNumber string) (map[string]interface{}, error) {
+	return c.GetBlockRaw(ctx, map[string]interface{}{
+		"Blockchain":  c.HexFix(blockchain),
+		"BlockNumber": blockNumber,
+		"Version":     c.version,
+	})
+}
+
+// GetBlockRangeRaw gets range of blocks (request object style)
+func (c *Client) GetBlockRangeRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetBlockRange", req)
 }
 
-// GetBlockCount Get blockchain height
-// Retrieves the blockchain block height (total number of blocks).
-// Also known as getBlockHeight in some documentation.
-func (c *Client) GetBlockCount(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
-	return c.makeRequest(ctx, "GetBlockCount", req)
+// GetBlockRange gets range of blocks (convenience method)
+func (c *Client) GetBlockRange(ctx context.Context, blockchain string, start string, end string) (map[string]interface{}, error) {
+	return c.GetBlockRangeRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Start":      start,
+		"End":        end,
+		"Version":    c.version,
+	})
 }
 
-// GetAnalytics Get blockchain analytics
-// Retrieves blockchain analytics and statistics.
-// Returns comprehensive information about the blockchain state.
-func (c *Client) GetAnalytics(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetBlockCountRaw gets blockchain height (request object style)
+func (c *Client) GetBlockCountRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+	return c.makeRequest(ctx, "GetBlockHeight", req)
+}
+
+// GetBlockCount gets blockchain height (convenience method)
+func (c *Client) GetBlockCount(ctx context.Context, blockchain string) (map[string]interface{}, error) {
+	return c.GetBlockCountRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Version":    c.version,
+	})
+}
+
+// GetAnalyticsRaw gets blockchain analytics (request object style)
+func (c *Client) GetAnalyticsRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAnalytics", req)
 }
 
-// TestContract Test smart contract execution
-// Tests smart contract execution locally without sending a transaction.
-// Useful for testing contract logic before deploying or executing.
-func (c *Client) TestContract(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetAnalytics gets blockchain analytics (convenience method)
+func (c *Client) GetAnalytics(ctx context.Context, blockchain string) (map[string]interface{}, error) {
+	return c.GetAnalyticsRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Version":    c.version,
+	})
+}
+
+// TestContractRaw tests smart contract (request object style)
+func (c *Client) TestContractRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "TestContract", req)
 }
 
-// CallContract Call smart contract function
-// Calls a smart contract function on the blockchain.
-// Executes the specified function with provided parameters.
-func (c *Client) CallContract(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// TestContract tests smart contract execution (convenience method)
+// Auto-strips '0x' prefix, auto-converts project to hex, auto-generates timestamp
+func (c *Client) TestContract(ctx context.Context, blockchain string, from string, project string) (map[string]interface{}, error) {
+	return c.TestContractRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"From":       c.HexFix(from),
+		"Project":    c.StringToHex(project),
+		"Timestamp":  c.GetFormattedTimestamp(),
+		"Version":    c.version,
+	})
+}
+
+// CallContractRaw calls smart contract (request object style)
+func (c *Client) CallContractRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "CallContract", req)
 }
 
-// GetAssetList List all assets on blockchain
-// Retrieves the list of all assets minted on a specific blockchain.
-// Returns an array of asset information.
-func (c *Client) GetAssetList(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// CallContract calls smart contract function (convenience method)
+// Auto-strips '0x' prefix, auto-converts request to hex, auto-generates timestamp
+func (c *Client) CallContract(ctx context.Context, blockchain string, address string, from string, request string) (map[string]interface{}, error) {
+	return c.CallContractRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Address":    c.HexFix(address),
+		"From":       c.HexFix(from),
+		"Request":    c.StringToHex(request),
+		"Timestamp":  c.GetFormattedTimestamp(),
+		"Version":    c.version,
+	})
+}
+
+// GetAssetListRaw lists all assets (request object style)
+func (c *Client) GetAssetListRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAssetList", req)
 }
 
-// GetAsset Get specific asset information
-// Retrieves an asset descriptor with complete asset information.
-// Returns detailed information about the specified asset.
-func (c *Client) GetAsset(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetAssetList lists all assets on blockchain (convenience method)
+func (c *Client) GetAssetList(ctx context.Context, blockchain string) (map[string]interface{}, error) {
+	return c.GetAssetListRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Version":    c.version,
+	})
+}
+
+// GetAssetRaw gets specific asset (request object style)
+func (c *Client) GetAssetRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAsset", req)
 }
 
-// GetAssetSupply Get asset supply information
-// Retrieves the total, circulating, and residual supply of a specified asset.
-// Returns comprehensive supply metrics.
-func (c *Client) GetAssetSupply(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetAsset gets specific asset information (convenience method)
+func (c *Client) GetAsset(ctx context.Context, blockchain string, assetName string) (map[string]interface{}, error) {
+	return c.GetAssetRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"AssetName":  assetName,
+		"Version":    c.version,
+	})
+}
+
+// GetAssetSupplyRaw gets asset supply (request object style)
+func (c *Client) GetAssetSupplyRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAssetSupply", req)
 }
 
-// GetVoucher Retrieve voucher information
-// Retrieves an existing voucher by code.
-// Code is automatically stripped of 0x prefix if present.
-func (c *Client) GetVoucher(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetAssetSupply gets asset supply information (convenience method)
+func (c *Client) GetAssetSupply(ctx context.Context, blockchain string, assetName string) (map[string]interface{}, error) {
+	return c.GetAssetSupplyRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"AssetName":  assetName,
+		"Version":    c.version,
+	})
+}
+
+// GetVoucherRaw retrieves voucher (request object style)
+func (c *Client) GetVoucherRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetVoucher", req)
 }
 
-// GetDomain Resolve domain to wallet address
-// Resolves a domain name to a wallet address.
-// A single wallet can have multiple domain associations.
-// Also known as resolveDomain.
-func (c *Client) GetDomain(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
-	return c.makeRequest(ctx, "GetDomain", req)
+// GetVoucher retrieves voucher information (convenience method)
+// Auto-strips '0x' prefix from code
+func (c *Client) GetVoucher(ctx context.Context, blockchain string, code string) (map[string]interface{}, error) {
+	return c.GetVoucherRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Code":       c.HexFix(code),
+		"Version":    c.version,
+	})
 }
 
-// GetBlockchains List available blockchains
-// Retrieves the list of blockchains available in the network.
-// Returns information about all active and inactive blockchains.
-func (c *Client) GetBlockchains(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+// GetDomainRaw resolves domain (request object style)
+func (c *Client) GetDomainRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+	return c.makeRequest(ctx, "ResolveDomain", req)
+}
+
+// GetDomain resolves domain to wallet address (convenience method)
+func (c *Client) GetDomain(ctx context.Context, blockchain string, domain string) (map[string]interface{}, error) {
+	return c.GetDomainRaw(ctx, map[string]interface{}{
+		"Blockchain": c.HexFix(blockchain),
+		"Domain":     domain,
+		"Version":    c.version,
+	})
+}
+
+// GetBlockchainsRaw lists available blockchains (request object style)
+func (c *Client) GetBlockchainsRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetBlockchains", req)
+}
+
+// GetBlockchains lists available blockchains (convenience method)
+func (c *Client) GetBlockchains(ctx context.Context) (map[string]interface{}, error) {
+	return c.GetBlockchainsRaw(ctx, map[string]interface{}{
+		"Version": c.version,
+	})
 }
 
 // ============================================================================
@@ -425,22 +697,8 @@ func (c *Client) RegisterWallet(ctx context.Context, blockchain string, publicKe
 	id := c.HashString(blockchain + from + to + payload + nonce + timestamp)
 	signature := ""
 
-	// Build request
-	request := map[string]interface{}{
-		"ID":         id,
-		"From":       from,
-		"To":         to,
-		"Timestamp":  timestamp,
-		"Type":       txType,
-		"Payload":    payload,
-		"Nonce":      nonce,
-		"Signature":  signature,
-		"Blockchain": blockchain,
-		"Version":    "1.0.8",
-	}
-
-	// Call SendTransaction
-	return c.SendTransaction(ctx, request)
+	// Call SendTransaction with positional parameters
+	return c.SendTransaction(ctx, id, from, to, timestamp, txType, payload, nonce, signature, blockchain)
 }
 
 // ============================================================================
@@ -561,8 +819,29 @@ func (c *Client) GetFormattedTimestamp() string {
 // ============================================================================
 // Helper Methods - Encoding
 // ============================================================================
-// hexFix normalizes hex strings (removes 0x prefix if present)
-// This is a package-level helper function
+
+// HexFix normalizes hex strings (removes 0x prefix if present)
+// This method is used internally for auto-preprocessing but is also exported
+// for users who want to manually preprocess hex strings.
+//
+// Parameters:
+//   - hexString: Hex string to normalize (with or without '0x' prefix)
+//
+// Returns:
+//   - Normalized hex string without '0x' prefix
+//
+// Example:
+//
+//	normalized := client.HexFix("0xabcdef")  // returns "abcdef"
+//	normalized := client.HexFix("abcdef")    // returns "abcdef"
+func (c *Client) HexFix(hexString string) string {
+	if len(hexString) >= 2 && (hexString[:2] == "0x" || hexString[:2] == "0X") {
+		return hexString[2:]
+	}
+	return hexString
+}
+
+// hexFix is an internal convenience wrapper
 func hexFix(hexString string) string {
 	if len(hexString) >= 2 && (hexString[:2] == "0x" || hexString[:2] == "0X") {
 		return hexString[2:]

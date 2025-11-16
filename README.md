@@ -25,38 +25,90 @@ go get github.com/circular-protocol/circular-go
 
 ## 🚀 Quick Start
 
+The SDK supports two API styles for maximum flexibility:
+
+### Option 1: Convenience Methods (Recommended)
+
+Simpler API with auto-preprocessing and version injection:
+
 ```go
 package main
 
 import (
+    "context"
     "fmt"
     "log"
 
-    circular "github.com/circular-protocol/circular-go"
+    circularprotocol "github.com/circular-protocol/circular-go"
 )
 
 func main() {
-    // Initialize the API client
-    api := circular.NewCircularProtocolAPI(
+    // Initialize the client
+    client := circularprotocol.NewClient(
         "https://nag.circularlabs.io/NAG.php?cep=",
-        circular.WithAPIKey("your-api-key"), // Optional
+        "", // API key (optional)
     )
 
-    // Check if a wallet exists
-    params := map[string]interface{}{
-        "Address":    "0xd55872dbe508fd27445889b9d81bbc9411bb0f1353153a249f2fb34ef2690310",
-        "Blockchain": "MainNet",
-        "Version":    "1.0.8",
-    }
+    ctx := context.Background()
 
-    result, err := api.CheckWallet(params)
+    // Check if a wallet exists - auto-strips '0x', auto-injects version
+    result, err := client.CheckWallet(ctx, "MainNet", "0xd55872dbe508fd27445889b9d81bbc9411bb0f1353153a249f2fb34ef2690310")
     if err != nil {
         log.Fatalf("API Error: %v", err)
     }
 
-    fmt.Printf("Wallet exists: %v\\n", result["Response"])
+    fmt.Printf("Wallet exists: %v\n", result["Response"])
 }
 ```
+
+### Option 2: Raw Methods (Explicit Control)
+
+Full control over request parameters, no auto-preprocessing:
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    circularprotocol "github.com/circular-protocol/circular-go"
+)
+
+func main() {
+    client := circularprotocol.NewClient(
+        "https://nag.circularlabs.io/NAG.php?cep=",
+        "", // API key (optional)
+    )
+
+    ctx := context.Background()
+
+    // Check wallet with explicit request object
+    params := map[string]interface{}{
+        "Address":    "d55872dbe508fd27445889b9d81bbc9411bb0f1353153a249f2fb34ef2690310",
+        "Blockchain": "MainNet",
+        "Version":    "1.0.9",
+    }
+
+    result, err := client.CheckWalletRaw(ctx, params)
+    if err != nil {
+        log.Fatalf("API Error: %v", err)
+    }
+
+    fmt.Printf("Wallet exists: %v\n", result["Response"])
+}
+```
+
+### Key Differences
+
+| Feature | Convenience Methods | Raw Methods |
+|---------|---------------------|-------------|
+| **Method Names** | `CheckWallet`, `GetWallet`, etc. | `CheckWalletRaw`, `GetWalletRaw`, etc. |
+| **Parameters** | Positional (blockchain, address, ...) | Request object (map[string]interface{}) |
+| **Auto-preprocessing** | ✅ Strips '0x', converts to hex | ❌ Manual |
+| **Version injection** | ✅ Automatic | ❌ Manual |
+| **Best for** | Rapid development, cleaner code | Advanced use cases, explicit control |
 
 ## 📜 API Reference
 

@@ -94,30 +94,71 @@ This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDU
 - Add comments for exported functions (godoc format)
 - Group related functionality together
 
+### Dual Signature Pattern
+
+All API methods must support two calling patterns:
+
+1. **Raw method** (request object style - explicit control):
+```go
+// CheckWalletRaw checks if wallet exists (request object style)
+func (c *Client) CheckWalletRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+    return c.makeRequest(ctx, "CheckWallet", req)
+}
+```
+
+2. **Convenience method** (positional parameters with auto-preprocessing):
+```go
+// CheckWallet checks if wallet exists (convenience method)
+// Auto-strips '0x' prefix, auto-injects version
+func (c *Client) CheckWallet(ctx context.Context, blockchain string, address string) (map[string]interface{}, error) {
+    return c.CheckWalletRaw(ctx, map[string]interface{}{
+        "Blockchain": c.HexFix(blockchain),
+        "Address":    c.HexFix(address),
+        "Version":    c.version,
+    })
+}
+```
+
+**Auto-preprocessing rules:**
+- Use `c.HexFix()` for blockchain, address, ID, nodeID parameters
+- Use `c.StringToHex()` for project, request parameters in contract methods
+- Always inject `Version: c.version`
+- Auto-generate timestamps for contract methods with `c.GetFormattedTimestamp()`
+
 ### Example
 
 ```go
-// SendTransaction submits a transaction to the blockchain.
-// It requires a complete signed transaction including ID, addresses,
-// payload, nonce, and signature.
-//
-// Example:
-//   ctx := context.Background()
-//   req := map[string]interface{}{
-//       "ID":         "0x...",
-//       "From":       "0x...",
-//       "To":         "0x...",
-//       "Timestamp":  "2024:01:01-12:00:00",
-//       "Type":       "C_TYPE_TRANSFER",
-//       "Payload":    "0x...",
-//       "Nonce":      "1",
-//       "Signature":  "0x...",
-//       "Blockchain": "MainNet",
-//       "Version":    "1.0.8",
-//   }
-//   result, err := client.SendTransaction(ctx, req)
-func (c *Client) SendTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
-    // Implementation
+// SendTransactionRaw submits transaction (request object style)
+func (c *Client) SendTransactionRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
+    return c.makeRequest(ctx, "AddTransaction", req)
+}
+
+// SendTransaction submits transaction with positional parameters (convenience method)
+// Matches JavaScript implementation signature, auto-injects version
+func (c *Client) SendTransaction(
+    ctx context.Context,
+    id string,
+    from string,
+    to string,
+    timestamp string,
+    txType string,
+    payload string,
+    nonce string,
+    signature string,
+    blockchain string,
+) (map[string]interface{}, error) {
+    return c.SendTransactionRaw(ctx, map[string]interface{}{
+        "ID":         id,
+        "From":       from,
+        "To":         to,
+        "Timestamp":  timestamp,
+        "Type":       txType,
+        "Payload":    payload,
+        "Nonce":      nonce,
+        "Signature":  signature,
+        "Blockchain": blockchain,
+        "Version":    c.version,
+    })
 }
 ```
 
