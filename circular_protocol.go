@@ -221,140 +221,162 @@ func (c *Client) makeRequest(ctx context.Context, endpoint string, data map[stri
 // ============================================================================
 // CheckWallet Check if wallet exists
 // Checks whether a wallet address exists on the specified blockchain.
-Returns existence status and confirms the address format.
+// Returns existence status and confirms the address format.
 func (c *Client) CheckWallet(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "CheckWallet", req)
 }
+
 // GetWallet Get wallet information
 // Retrieves complete wallet information including balance and nonce.
-Returns all wallet properties including current state on the blockchain.
+// Returns all wallet properties including current state on the blockchain.
 func (c *Client) GetWallet(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetWallet", req)
 }
+
 // GetLatestTransactions Get latest transactions for wallet
 // Retrieves the latest transactions for a wallet address.
-Returns an array of transaction objects with details.
+// Returns an array of transaction objects with details.
 func (c *Client) GetLatestTransactions(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetLatestTransactions", req)
 }
+
 // GetWalletBalance Get wallet balance for specific asset
 // Retrieves the balance of a specified asset in a wallet.
-Returns the balance amount for the requested asset.
+// Returns the balance amount for the requested asset.
 func (c *Client) GetWalletBalance(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetWalletBalance", req)
 }
+
 // GetWalletNonce Get wallet nonce
 // Retrieves the nonce (transaction counter) of a wallet.
-The nonce is used for transaction ordering and must increment with each transaction.
+// The nonce is used for transaction ordering and must increment with each transaction.
 func (c *Client) GetWalletNonce(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetWalletNonce", req)
 }
+
 // SendTransaction Submit transaction to blockchain
 // Submits a transaction to the blockchain. Requires a complete signed transaction
 // including ID, addresses, payload, nonce, and signature.
 func (c *Client) SendTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "AddTransaction", req)
 }
+
 // GetPendingTransaction Get pending transaction by ID
 // Searches for a transaction by ID among pending transactions.
-Returns the transaction if it exists and is still pending.
+// Returns the transaction if it exists and is still pending.
 func (c *Client) GetPendingTransaction(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetPendingTransaction", req)
 }
+
 // GetTransactionByID Find transaction by ID
 // Finds a transaction by ID within a specified block range.
 // Searches through blocks to locate the transaction.
 func (c *Client) GetTransactionByID(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyID", req)
 }
+
 // GetTransactionByNode Find transactions by node ID
 // Finds transactions by node ID within a specified block range.
 // Returns all transactions associated with the node.
 func (c *Client) GetTransactionByNode(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyNode", req)
 }
+
 // GetTransactionByAddress Find transactions by address
 // Finds transactions by wallet address within a specified block range.
 // Returns transactions where the address is sender or recipient.
 func (c *Client) GetTransactionByAddress(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyAddress", req)
 }
+
 // GetTransactionByDate Find transactions by date range
 // Finds transactions by wallet address within a specified date range.
 // Returns all transactions for the address between the dates.
 func (c *Client) GetTransactionByDate(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetTransactionbyDate", req)
 }
+
 // GetBlock Get specific block
 // Retrieves a desired block by block number.
-Returns complete block information including transactions and hash.
+// Returns complete block information including transactions and hash.
 func (c *Client) GetBlock(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetBlock", req)
 }
+
 // GetBlockRange Get range of blocks
 // Retrieves all blocks in a specified range.
-If End = 0, then Start is the number of blocks from the last one minted going backward.
+// If End = 0, then Start is the number of blocks from the last one minted going backward.
 func (c *Client) GetBlockRange(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetBlockRange", req)
 }
+
 // GetBlockCount Get blockchain height
 // Retrieves the blockchain block height (total number of blocks).
-Also known as getBlockHeight in some documentation.
+// Also known as getBlockHeight in some documentation.
 func (c *Client) GetBlockCount(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetBlockCount", req)
 }
+
 // GetAnalytics Get blockchain analytics
 // Retrieves blockchain analytics and statistics.
-Returns comprehensive information about the blockchain state.
+// Returns comprehensive information about the blockchain state.
 func (c *Client) GetAnalytics(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAnalytics", req)
 }
+
 // TestContract Test smart contract execution
 // Tests smart contract execution locally without sending a transaction.
-Useful for testing contract logic before deploying or executing.
+// Useful for testing contract logic before deploying or executing.
 func (c *Client) TestContract(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "TestContract", req)
 }
+
 // CallContract Call smart contract function
 // Calls a smart contract function on the blockchain.
-Executes the specified function with provided parameters.
+// Executes the specified function with provided parameters.
 func (c *Client) CallContract(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "CallContract", req)
 }
+
 // GetAssetList List all assets on blockchain
 // Retrieves the list of all assets minted on a specific blockchain.
-Returns an array of asset information.
+// Returns an array of asset information.
 func (c *Client) GetAssetList(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAssetList", req)
 }
+
 // GetAsset Get specific asset information
 // Retrieves an asset descriptor with complete asset information.
-Returns detailed information about the specified asset.
+// Returns detailed information about the specified asset.
 func (c *Client) GetAsset(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAsset", req)
 }
+
 // GetAssetSupply Get asset supply information
 // Retrieves the total, circulating, and residual supply of a specified asset.
-Returns comprehensive supply metrics.
+// Returns comprehensive supply metrics.
 func (c *Client) GetAssetSupply(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetAssetSupply", req)
 }
+
 // GetVoucher Retrieve voucher information
 // Retrieves an existing voucher by code.
-Code is automatically stripped of 0x prefix if present.
+// Code is automatically stripped of 0x prefix if present.
 func (c *Client) GetVoucher(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetVoucher", req)
 }
+
 // GetDomain Resolve domain to wallet address
 // Resolves a domain name to a wallet address.
-A single wallet can have multiple domain associations.
-Also known as resolveDomain.
+// A single wallet can have multiple domain associations.
+// Also known as resolveDomain.
 func (c *Client) GetDomain(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetDomain", req)
 }
+
 // GetBlockchains List available blockchains
 // Retrieves the list of blockchains available in the network.
-Returns information about all active and inactive blockchains.
+// Returns information about all active and inactive blockchains.
 func (c *Client) GetBlockchains(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetBlockchains", req)
 }
