@@ -38,7 +38,6 @@ type Client struct {
 	nagKey     string
 	httpClient *http.Client
 	headers    map[string]string
-	lastError string
 }
 
 // Config holds client configuration options
@@ -586,45 +585,10 @@ func (c *Client) HexToString(hexStr string) (string, error) {
 	return string(bytes), nil
 }
 
-// padNumber pads number with leading zero if single digit
-// This is a package-level helper function
-func padNumber(num int) string {
-	if num < 10 {
-		return fmt.Sprintf("0%d", num)
-	}
-	return fmt.Sprintf("%d", num)
-}
-
-// GetFormattedTimestamp returns current timestamp in Circular Protocol format
-// Format: YYYY:MM:DD-hh:mm:ss (UTC)
-func (c *Client) GetFormattedTimestamp() string {
-	now := time.Now().UTC()
-	return fmt.Sprintf("%d:%s:%s-%s:%s:%s",
-		now.Year(),
-		padNumber(int(now.Month())),
-		padNumber(now.Day()),
-		padNumber(now.Hour()),
-		padNumber(now.Minute()),
-		padNumber(now.Second()))
-}
 
 // ============================================================================
 // Helper Methods - Advanced
 // ============================================================================
-// GetError returns the last error message
-func (c *Client) GetError() string {
-	return c.lastError
-}
-
-// handleError stores error message for later retrieval
-func (c *Client) handleError(err error) {
-	if err != nil {
-		c.lastError = err.Error()
-	} else {
-		c.lastError = "Unknown error"
-	}
-}
-
 // GetTransactionOutcome polls for transaction confirmation
 // blockchain: Blockchain network (e.g., 'MainNet', 'testnet')
 // txID: Transaction ID to monitor
@@ -658,7 +622,6 @@ func (c *Client) GetTransactionOutcome(
 		elapsed := time.Since(startTime)
 		if elapsed >= timeout {
 			err := fmt.Errorf("transaction %s timed out after %d seconds", txID, timeoutSec)
-			c.handleError(err)
 			return nil, err
 		}
 
@@ -675,7 +638,6 @@ func (c *Client) GetTransactionOutcome(
 		if err != nil {
 			// If error is not just "pending", return error
 			if !strings.Contains(strings.ToLower(err.Error()), "pending") {
-				c.handleError(err)
 				return nil, err
 			}
 

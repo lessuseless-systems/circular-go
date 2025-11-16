@@ -278,7 +278,6 @@ type Client struct {
     nagKey     string
     httpClient *http.Client
     headers    map[string]string
-    lastError  string
 }
 ```
 

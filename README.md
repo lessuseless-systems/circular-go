@@ -60,17 +60,18 @@ func main() {
 
 ## 📜 API Reference
 
-The Circular Protocol Go SDK provides **39 methods** across multiple categories for comprehensive blockchain interaction.
+The Circular Protocol Go SDK provides **37 methods** across multiple categories for comprehensive blockchain interaction.
 
-### Wallet Operations (5 methods)
+### Wallet Operations (6 methods)
 
 - **`CheckWallet`** - Verify wallet existence on the blockchain
 - **`GetWallet`** - Retrieve complete wallet details and metadata
 - **`GetLatestTransactions`** - Get recent wallet activity and transaction history
 - **`GetWalletBalance`** - Query current wallet balance across assets
 - **`GetWalletNonce`** - Get transaction nonce for the wallet
+- **`RegisterWallet`** - Register new wallet on the blockchain
 
-### Transaction Operations (6 methods)
+### Transaction Operations (7 methods)
 
 - **`SendTransaction`** - Submit new transaction to the blockchain
 - **`GetPendingTransaction`** - Check transaction status in the mempool
@@ -78,13 +79,15 @@ The Circular Protocol Go SDK provides **39 methods** across multiple categories 
 - **`GetTransactionByNode`** - Query transactions by validator node
 - **`GetTransactionByAddress`** - Query all transactions for a wallet address
 - **`GetTransactionByDate`** - Query transactions within a date range
+- **`GetTransactionOutcome`** - Poll for transaction confirmation with automatic retries
 
-### Block Operations (4 methods)
+### Blockchain Operations (5 methods)
 
 - **`GetBlock`** - Retrieve block data by block number or hash
 - **`GetBlockRange`** - Query multiple blocks within a range
 - **`GetBlockCount`** - Get current blockchain height (latest block number)
 - **`GetAnalytics`** - Retrieve blockchain performance metrics and analytics
+- **`GetBlockchains`** - List all supported blockchain networks
 
 ### Contract Operations (2 methods)
 
@@ -102,19 +105,14 @@ The Circular Protocol Go SDK provides **39 methods** across multiple categories 
 
 - **`GetDomain`** - Query blockchain domain registry (resolve domain to address)
 
-### Network Operations (1 method)
-
-- **`GetBlockchains`** - List all supported blockchain networks
-
 ---
 
-### Cryptographic Helpers (5 methods)
+### Cryptographic Utilities (4 methods)
 
 - **`SignMessage`** - Generate ECDSA secp256k1 signatures (DER format)
 - **`VerifySignature`** - Verify message signatures against public keys
 - **`GetPublicKey`** - Derive public key from private key (128 hex characters, uncompressed, no 0x04 prefix)
 - **`HashString`** - Generate SHA-256 hash of string input
-- **`GetFormattedTimestamp`** - Get current UTC timestamp in Circular Protocol format (`YYYY:MM:DD-HH:mm:ss`)
 
 **Implementation Details:**
 - **TypeScript/JavaScript**: `crypto-browserify` (browser-compatible)
@@ -126,51 +124,36 @@ The Circular Protocol Go SDK provides **39 methods** across multiple categories 
 
 ---
 
-### Encoding Helpers (4 methods)
+### Encoding/Format Utilities (4 methods)
 
 - **`HexFix`** - Normalize hex strings (remove `0x` prefix if present)
 - **`StringToHex`** - Convert UTF-8 string to hexadecimal encoding
 - **`HexToString`** - Convert hexadecimal string to UTF-8
-- **`PadNumber`** - Zero-pad single-digit numbers (e.g., `5` → `"05"`)
+- **`GetFormattedTimestamp`** - Get current UTC timestamp in Circular Protocol format (`YYYY:MM:DD-HH:mm:ss`)
 
 ---
 
-### Advanced Helpers (3 methods)
+### NAG Configuration (4 methods)
 
-- **`GetError`** - Retrieve last error message from SDK
-- **`HandleError`** - Internal error tracking and logging
-- **`GetTransactionOutcome`** - Poll for transaction confirmation with automatic retries
-
-**Transaction Polling Behavior:**
-- Checks transaction status every **5 seconds** (configurable via `intervalSec`)
-- Returns successfully when transaction has `BlockNumber > 0` (confirmed)
-- Throws timeout error after **120 seconds** (configurable via `timeoutSec`)
-- Handles "pending" status gracefully with automatic retries
-- Distinguishes between temporary "pending" and permanent errors
+- **`GetNagUrl`** - Retrieve current NAG endpoint URL
+- **`SetNagUrl`** - Configure NAG endpoint URL
+- **`GetNagKey`** - Retrieve current API key
+- **`SetNagKey`** - Configure API key for authenticated requests
 
 ---
 
-### Convenience Methods (1 method)
+## 📊 Total Methods: 37
 
-- **`RegisterWallet`** - Simplified wallet registration (wraps `SendTransaction`)
-
-**Implementation:**
-- Automatically derives `From` and `To` addresses via `HashString(publicKey)`
-- Constructs transaction payload: `{"Action": "CP_WALLET", "PublicKey": "..."}`
-- Sets default values: `Nonce="00000000"`, `Type="C"`, `Signature="0000..."`
-- Calculates transaction ID as SHA-256 hash of transaction fields
-- Returns same response structure as `SendTransaction`
-
----
-
-## 📊 Total Methods: 39
-
-- **23** API Endpoint Methods
-- **5** Cryptographic Helpers
-- **4** Encoding Helpers
-- **3** Advanced Helpers
-- **3** Configuration Methods (getNagUrl, setNagUrl, getNagKey, setNagKey, setHeader, etc.)
-- **1** Convenience Method
+Breaking down by category:
+- **6** Wallet Operations
+- **7** Transaction Operations
+- **5** Blockchain Operations
+- **2** Smart Contract Operations
+- **4** Asset Management
+- **1** Domain Management
+- **4** Cryptographic Utilities
+- **4** Encoding/Format Utilities
+- **4** NAG Configuration
 
 > **Note**: For detailed parameter types, response structures, and advanced usage examples, refer to the **[Go SDK Documentation](https://circular-protocol.gitbook.io/circular-sdk/api-docs/go)**.
 

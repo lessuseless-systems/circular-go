@@ -104,18 +104,18 @@ func SendRequest(data interface{}, nagFunction string, nagURL string) map[string
 	return response
 }
 
-// PadNumber pads a number with leading zeros to number less than 10
-func PadNumber(number int) string {
+// padNumber pads a number with leading zeros to number less than 10
+func padNumber(number int) string {
 	if number < 10 {
 		return fmt.Sprintf("0%d", number)
 	}
 	return fmt.Sprintf("%d", number)
 }
 
-// Generate formatted timestamp in the format YYYY-MM-DD-HH:MM:SS
+// GetFormattedTimestamp generates formatted timestamp in the format YYYY:MM:DD-HH:mm:ss
 func GetFormattedTimestamp() string {
-	t := time.Now()
-	return fmt.Sprintf("%d:%s:%s-%s:%s:%s", t.Year(), PadNumber(int(t.Month())), PadNumber(t.Day()), PadNumber(t.Hour()), PadNumber(t.Minute()), PadNumber(t.Second()))
+	t := time.Now().UTC()
+	return fmt.Sprintf("%d:%s:%s-%s:%s:%s", t.Year(), padNumber(int(t.Month())), padNumber(t.Day()), padNumber(t.Hour()), padNumber(t.Minute()), padNumber(t.Second()))
 }
 
 // ECSignature defines the structure for DER encoded signature
