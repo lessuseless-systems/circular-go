@@ -50,6 +50,8 @@ type Client struct {
 	httpClient *http.Client
 	headers    map[string]string
 	version    string
+	nodeURL    string
+	lastError  string
 }
 
 // Config holds client configuration options
@@ -59,6 +61,7 @@ type Config struct {
 	Timeout    time.Duration
 	HTTPClient *http.Client
 	Headers    map[string]string
+	NodeURL    string
 }
 
 // APIError represents an error returned by the Circular Protocol API
@@ -109,6 +112,8 @@ func NewClientWithConfig(cfg Config) *Client {
 		httpClient: httpClient,
 		headers:    headers,
 		version:    Version,
+		nodeURL:    cfg.NodeURL,
+		lastError:  "",
 	}
 }
 
@@ -135,6 +140,60 @@ func (c *Client) GetNAGKey() string {
 // SetHeader sets a custom HTTP header
 func (c *Client) SetHeader(key, value string) {
 	c.headers[key] = value
+}
+
+// GetVersion returns the SDK version
+func (c *Client) GetVersion() string {
+	return c.version
+}
+
+// SetNode sets the primary node address for querying blockchain
+func (c *Client) SetNode(address string) {
+	c.nodeURL = address
+}
+
+// GetNode returns the current node address
+func (c *Client) GetNode() string {
+	return c.nodeURL
+}
+
+// GetError returns the last error message from SDK
+func (c *Client) GetError() string {
+	return c.lastError
+}
+
+// HandleError processes API error responses and stores the error message
+// This method checks the response for API-level errors and returns true if an error was found
+func (c *Client) HandleError(result map[string]interface{}) bool {
+	if result == nil {
+		c.lastError = "nil response received"
+		return true
+	}
+
+	// Check for Result field indicating success/failure
+	if resultCode, ok := result["Result"].(float64); ok {
+		if resultCode != 200 {
+			// Extract error message from Response field
+			if response, ok := result["Response"].(string); ok {
+				c.lastError = response
+			} else {
+				c.lastError = fmt.Sprintf("API error with code: %.0f", resultCode)
+			}
+			return true
+		}
+	}
+
+	// No error found
+	c.lastError = ""
+	return false
+}
+
+// Dispose cleans up resources used by the client
+// This closes idle connections in the HTTP client
+func (c *Client) Dispose() {
+	if c.httpClient != nil {
+		c.httpClient.CloseIdleConnections()
+	}
 }
 
 // makeRequest performs an HTTP request to the NAG API
@@ -217,12 +276,16 @@ func (c *Client) makeRequest(ctx context.Context, endpoint string, data map[stri
 		if response, ok := result["Response"].(string); ok {
 			errorMsg = response
 		}
+		c.lastError = errorMsg
 		return nil, &APIError{
 			Message:    errorMsg,
 			StatusCode: int(resultCode),
 			Endpoint:   endpoint,
 		}
 	}
+
+	// Clear last error on success
+	c.lastError = ""
 
 	// Return full response (with Result and Response fields)
 	return result, nil
