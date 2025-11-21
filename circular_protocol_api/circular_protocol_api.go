@@ -92,6 +92,10 @@ func CallContract(blockchain string, from string, project string, request string
 * @param address string - address to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   result := circular_protocol_api.CheckWallet("MainNet", "0x742d35...")
+*   fmt.Printf("Exists: %v\n", result["Response"])
  */
 func CheckWallet(blockchain string, address string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -108,6 +112,10 @@ func CheckWallet(blockchain string, address string) map[string]interface{} {
 * @param address string - address to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   wallet := circular_protocol_api.GetWallet("MainNet", "0x742d35...")
+*   fmt.Printf("Balance: %v\n", wallet["Response"])
  */
 func GetWallet(blockchain string, address string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -122,6 +130,10 @@ func GetWallet(blockchain string, address string) map[string]interface{} {
 * @param blockchain string - blockchain to check
 * @param address string - address to check
 * @return map[string]interface{} - response
+*
+* Example:
+*   nonce := circular_protocol_api.GetWalletNonce("MainNet", "0x742d35...")
+*   fmt.Printf("Nonce: %v\n", nonce["Response"])
  */
 func GetWalletNonce(blockchain string, address string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -136,6 +148,10 @@ func GetWalletNonce(blockchain string, address string) map[string]interface{} {
 * @param blockchain string - blockchain to check
 * @param address string - address to check
 * @return map[string]interface{} - response
+*
+* Example:
+*   txs := circular_protocol_api.GetLatestTransactions("MainNet", "0x742d35...")
+*   fmt.Printf("Transactions: %v\n", txs["Response"])
  */
 func GetLatestTransactions(blockchain string, address string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -152,6 +168,10 @@ func GetLatestTransactions(blockchain string, address string) map[string]interfa
 * @param asset string - asset to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   balance := circular_protocol_api.GetWalletBalance("MainNet", "0x742d35...", "CIRX")
+*   fmt.Printf("Balance: %v\n", balance["Response"])
  */
 func GetWalletBalance(blockchain string, address string, asset string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -168,6 +188,10 @@ func GetWalletBalance(blockchain string, address string, asset string) map[strin
 * @param address string - address to check
 * @return id string - transaction ID
 * @return error - error
+*
+* Example:
+*   result := circular_protocol_api.RegisterWallet("MainNet", "02c3...")
+*   fmt.Printf("TxID: %v\n", result["Response"])
  */
 func RegisterWallet(blockchain string, publicKey string) map[string]interface{} {
 	blockchain = utils.HexFix(blockchain)
@@ -209,6 +233,10 @@ func RegisterWallet(blockchain string, publicKey string) map[string]interface{} 
 * @param name string - domain to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   domain := circular_protocol_api.GetDomain("MainNet", "mywallet.cirx")
+*   fmt.Printf("Address: %v\n", domain["Response"])
  */
 func GetDomain(blockchain string, name string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -225,6 +253,10 @@ func GetDomain(blockchain string, name string) map[string]interface{} {
 * @param blockchain string - blockchain to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   assets := circular_protocol_api.GetAssetList("MainNet")
+*   fmt.Printf("Assets: %v\n", assets["Response"])
  */
 func GetAssetList(blockchain string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -239,6 +271,10 @@ func GetAssetList(blockchain string) map[string]interface{} {
 * @param asset string - asset to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   asset := circular_protocol_api.GetAsset("MainNet", "CIRX")
+*   fmt.Printf("Details: %v\n", asset["Response"])
  */
 func GetAsset(blockchain string, asset string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -254,6 +290,10 @@ func GetAsset(blockchain string, asset string) map[string]interface{} {
 * @param asset string - asset to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   supply := circular_protocol_api.GetAssetSupply("MainNet", "CIRX")
+*   fmt.Printf("Supply: %v\n", supply["Response"])
  */
 func GetAssetSupply(blockchain string, asset string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -269,6 +309,10 @@ func GetAssetSupply(blockchain string, asset string) map[string]interface{} {
 * @param code string - voucher code
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   voucher := circular_protocol_api.GetVoucher("MainNet", "0x123...")
+*   fmt.Printf("Voucher: %v\n", voucher["Response"])
  */
 func GetVoucher(blockchain string, code string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -287,6 +331,10 @@ func GetVoucher(blockchain string, code string) map[string]interface{} {
 * @param end int - end block
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   blocks := circular_protocol_api.GetBlockRange("MainNet", 0, 10)
+*   fmt.Printf("Blocks: %v\n", blocks["Response"])
  */
 func GetBlockRange(blockchain string, start int, end int) map[string]interface{} {
 	data := map[string]interface{}{
@@ -303,6 +351,10 @@ func GetBlockRange(blockchain string, start int, end int) map[string]interface{}
 * @param number int - block to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   block := circular_protocol_api.GetBlock("MainNet", 12345)
+*   fmt.Printf("Block: %v\n", block["Response"])
  */
 func GetBlock(blockchain string, number int) map[string]interface{} {
 	data := map[string]interface{}{
@@ -317,6 +369,10 @@ func GetBlock(blockchain string, number int) map[string]interface{} {
 * @param blockchain string - blockchain to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   count := circular_protocol_api.GetBlockCount("MainNet")
+*   fmt.Printf("Height: %v\n", count["Response"])
  */
 func GetBlockCount(blockchain string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -330,6 +386,10 @@ func GetBlockCount(blockchain string) map[string]interface{} {
 * @param blockchain string - blockchain to check
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   stats := circular_protocol_api.GetAnalytics("MainNet")
+*   fmt.Printf("Stats: %v\n", stats["Response"])
  */
 func GetAnalytics(blockchain string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -342,6 +402,10 @@ func GetAnalytics(blockchain string) map[string]interface{} {
 /* Get the blockchains
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   chains := circular_protocol_api.GetBlockchains()
+*   fmt.Printf("Chains: %v\n", chains["Response"])
  */
 func GetBlockchains() map[string]interface{} {
 	data := map[string]interface{}{}
@@ -356,6 +420,10 @@ func GetBlockchains() map[string]interface{} {
 * @param TxID string - transaction ID
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   tx := circular_protocol_api.GetPendingTransaction("MainNet", "64f2...")
+*   fmt.Printf("Status: %v\n", tx["Response"])
  */
 func GetPendingTransaction(blockchain string, TxID string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -375,6 +443,10 @@ func GetPendingTransaction(blockchain string, TxID string) map[string]interface{
 * @return error - error
 *
 * If end = 0 then start is the number of blocks form the last one minted
+*
+* Example:
+*   tx := circular_protocol_api.GetTransactionByID("MainNet", "64f2...", 10, 0)
+*   fmt.Printf("Tx: %v\n", tx["Response"])
  */
 func GetTransactionByID(blockchain string, TxID string, start int, end int) map[string]interface{} {
 	data := map[string]interface{}{
@@ -396,6 +468,10 @@ func GetTransactionByID(blockchain string, TxID string, start int, end int) map[
 * @return error - error
 *
 * If end = 0 then start is the number of blocks form the last one minted
+*
+* Example:
+*   txs := circular_protocol_api.GetTransactionByNode("MainNet", "node1", 10, 0)
+*   fmt.Printf("Txs: %v\n", txs["Response"])
  */
 func GetTransactionByNode(blockchain string, node string, start int, end int) map[string]interface{} {
 	data := map[string]interface{}{
@@ -417,6 +493,10 @@ func GetTransactionByNode(blockchain string, node string, start int, end int) ma
 * @return error - error
 *
 * If end = 0 then start is the number of blocks form the last one minted
+*
+* Example:
+*   txs := circular_protocol_api.GetTransactionByAddress("MainNet", "0x742d35...", 10, 0)
+*   fmt.Printf("Txs: %v\n", txs["Response"])
  */
 func GetTransactionByAddress(blockchain string, address string, start int, end int) map[string]interface{} {
 	data := map[string]interface{}{
@@ -436,6 +516,10 @@ func GetTransactionByAddress(blockchain string, address string, start int, end i
 * @param endDate string - end block
 * @return map[string]interface{} - response
 * @return error - error
+*
+* Example:
+*   txs := circular_protocol_api.GetTransactionByDate("MainNet", "0x742d35...", "2023-01-01", "2023-12-31")
+*   fmt.Printf("Txs: %v\n", txs["Response"])
  */
 func GetTransactionByDate(blockchain string, address string, startDate string, endDate string) map[string]interface{} {
 	data := map[string]interface{}{
@@ -460,6 +544,10 @@ func GetTransactionByDate(blockchain string, address string, startDate string, e
 * @param blockchain string - blockchain to check
 * @return id string - transaction ID
 * @return error - error
+*
+* Example:
+*   result := circular_protocol_api.SendTransaction(id, sender, to, timestamp, "C_TYPE_TRANSFER", payload, nonce, signature, "MainNet")
+*   fmt.Printf("Result: %v\n", result)
  */
 func SendTransaction(id string, sender string, to string, timestamp string, transactionType string, payload string, nonce string, signature string, blockchain string) map[string]interface{} {
 	data := map[string]interface{}{
