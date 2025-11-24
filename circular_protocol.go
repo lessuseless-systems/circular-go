@@ -465,6 +465,86 @@ func (c *Client) SendTransaction(
 	})
 }
 
+// SendBatch sends a batch of transactions with a 120s timeout
+func (c *Client) SendBatch(ctx context.Context, transactions []map[string]interface{}) (map[string]interface{}, error) {
+	endpoint := "AddBatch"
+	url := c.nagURL + "Circular_" + endpoint + "_"
+	data := map[string]interface{}{
+		"Transactions": transactions,
+	}
+
+	// Marshal request data
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, &APIError{
+			Message:    fmt.Sprintf("failed to marshal request: %v", err),
+			StatusCode: 0,
+			Endpoint:   endpoint,
+		}
+	}
+
+	// Create a context with 120s timeout
+	ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+	defer cancel()
+
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, &APIError{
+			Message:    fmt.Sprintf("failed to create request: %v", err),
+			StatusCode: 0,
+			Endpoint:   endpoint,
+		}
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+	for key, value := range c.headers {
+		req.Header.Set(key, value)
+	}
+	if c.nagKey != "" {
+		req.Header.Set("X-NAG-Key", c.nagKey)
+	}
+
+	// Use a custom client to ensure timeout is respected
+	client := &http.Client{
+		Timeout: 120 * time.Second,
+	}
+
+	// Send request
+	resp, err := client.Do(req)
+	if err != nil {
+		return map[string]interface{}{
+			"success": false,
+			"message": "Server unreachable or request timeout",
+			"error":   err.Error(),
+		}, nil
+	}
+	defer resp.Body.Close()
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, &APIError{
+			Message:    fmt.Sprintf("failed to read response: %v", err),
+			StatusCode: resp.StatusCode,
+			Endpoint:   endpoint,
+		}
+	}
+
+	// Parse JSON response
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		// If not JSON, return as is
+		return map[string]interface{}{
+			"status":  resp.StatusCode,
+			"message": string(body),
+		}, nil
+	}
+
+	return result, nil
+}
+
 // GetPendingTransactionRaw gets pending transaction (request object style)
 func (c *Client) GetPendingTransactionRaw(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	return c.makeRequest(ctx, "GetPendingTransaction", req)
